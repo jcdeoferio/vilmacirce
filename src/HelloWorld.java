@@ -9,6 +9,7 @@ import java.util.logging.Logger;
 import com.jme.app.SimpleGame;
 import com.jme.bounding.BoundingSphere;
 import com.jme.image.Texture;
+import com.jme.input.InputHandler;
 import com.jme.input.KeyInput;
 import com.jme.input.action.InputActionEvent;
 import com.jme.input.action.KeyInputAction;
@@ -98,7 +99,7 @@ public class HelloWorld extends SimpleGame {
 		 * Set the action called "firebullet", bound to KEY_F, to performAction
 		 * FireBullet
 		 */
-		input.addAction(new FireBullet(), "firebullet", KeyInput.KEY_F, false);
+		input.addAction(new FireBullet(), InputHandler.DEVICE_MOUSE, InputHandler.BUTTON_ALL, InputHandler.AXIS_NONE, true);
  
 		/** Make bullet material */
 		bulletMaterial = display.getRenderer().createMaterialState();
@@ -150,35 +151,35 @@ public class HelloWorld extends SimpleGame {
 	}
  
 	private void setupSky() {
-		sb = new Skybox("skybox", 200, 200, 200);
+		sb = new Skybox("skybox", 400, 400, 400);
  
 		try {
 			ResourceLocatorTool.addResourceLocator(
 					ResourceLocatorTool.TYPE_TEXTURE,
 					new SimpleResourceLocator(getClass().getResource(
-							"/jmetest/data/texture/textures/")));
+							"/jmetest/data/images/images/skybox/")));
 		} catch (Exception e) {
 			logger.warning("Unable to access texture directory.");
 			e.printStackTrace();
 		}
  
 		sb.setTexture(Skybox.Face.North, TextureManager.loadTexture(
-				"03182010115.jpg", Texture.MinificationFilter.BilinearNearestMipMap,
+				"north.jpg", Texture.MinificationFilter.BilinearNearestMipMap,
 				Texture.MagnificationFilter.Bilinear));
-		sb.setTexture(Skybox.Face.West, TextureManager.loadTexture("03182010107.jpg",
+		sb.setTexture(Skybox.Face.West, TextureManager.loadTexture("west.jpg",
 				Texture.MinificationFilter.BilinearNearestMipMap,
 				Texture.MagnificationFilter.Bilinear));
 		sb.setTexture(Skybox.Face.South, TextureManager.loadTexture(
-				"03182010109.jpg", Texture.MinificationFilter.BilinearNearestMipMap,
+				"south.jpg", Texture.MinificationFilter.BilinearNearestMipMap,
 				Texture.MagnificationFilter.Bilinear));
-		sb.setTexture(Skybox.Face.East, TextureManager.loadTexture("03182010112.jpg",
+		sb.setTexture(Skybox.Face.East, TextureManager.loadTexture("east.jpg",
 				Texture.MinificationFilter.BilinearNearestMipMap,
 				Texture.MagnificationFilter.Bilinear));
-		sb.setTexture(Skybox.Face.Up, TextureManager.loadTexture("03182010125.jpg",
+		sb.setTexture(Skybox.Face.Up, TextureManager.loadTexture("top.jpg",
 				Texture.MinificationFilter.BilinearNearestMipMap,
 				Texture.MagnificationFilter.Bilinear));
 		sb.setTexture(Skybox.Face.Down, TextureManager.loadTexture(
-				"03182010116.jpg", Texture.MinificationFilter.BilinearNearestMipMap,
+				"bottom.jpg", Texture.MinificationFilter.BilinearNearestMipMap,
 				Texture.MagnificationFilter.Bilinear));
 		sb.preloadTextures();
  
