@@ -68,12 +68,6 @@ public class HelloWorld extends SimpleGame {
 	AudioTrack laserSound;
 	AudioTrack targetSound;
  
-	public static void main(String[] args) {
-		HelloWorld app = new HelloWorld();
-		app.setConfigShowMode(ConfigShowMode.AlwaysShow);
-		app.start();
-	}
- 
 	protected void simpleInitGame() {
 		setupSound();
  
