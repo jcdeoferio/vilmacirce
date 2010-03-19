@@ -67,12 +67,14 @@ public class HelloWorld extends SimpleGame {
 	 */
 	AudioTrack laserSound;
 	AudioTrack targetSound;
+	long lastTimeFired;
  
 	protected void simpleInitGame() {
 		setupSound();
+		lastTimeFired = System.currentTimeMillis();
  
 		/** Create a + for the middle of the screen */
-		Text cross = Text.createDefaultTextLabel("Crosshairs", "crosshair");
+		Text cross = Text.createDefaultTextLabel("Crosshairs", "+");
  
 		// 8 is half the width of a font char
 		/** Move the + to the middle */
@@ -138,7 +140,7 @@ public class HelloWorld extends SimpleGame {
 		targetSound.setMaxAudibleDistance(1000);
 		targetSound.setVolume(1.0f);
 		laserSound = audio.createAudioTrack(getClass().getResource(
-				"/jmetest/data/sound/laser.ogg"), false);
+				"/jmetest/data/sound/sounds/gunstie.ogg"), false);
 		laserSound.setMaxAudibleDistance(1000);
 		laserSound.setVolume(1.0f);
 	}
@@ -188,6 +190,11 @@ public class HelloWorld extends SimpleGame {
 		int numLasors;
  
 		public void performAction(InputActionEvent evt) {
+			long currTime = System.currentTimeMillis();
+			if(currTime - lastTimeFired < 250){
+				return;
+			}
+			lastTimeFired = currTime;
 			logger.info("BANG");
 			/** Create bullet */
 			Tube lasor = new Tube("lasor" + numLasors++, 0.1f, 0.01f, 1.0f);
