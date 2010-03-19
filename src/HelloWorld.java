@@ -7,10 +7,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
  
 import com.jme.app.SimpleGame;
+import com.jme.bounding.BoundingBox;
 import com.jme.bounding.BoundingSphere;
 import com.jme.image.Texture;
 import com.jme.input.InputHandler;
-import com.jme.input.KeyInput;
 import com.jme.input.action.InputActionEvent;
 import com.jme.input.action.KeyInputAction;
 import com.jme.math.Vector3f;
@@ -21,7 +21,7 @@ import com.jme.scene.Skybox;
 import com.jme.scene.Spatial;
 import com.jme.scene.Text;
 import com.jme.scene.TriMesh;
-import com.jme.scene.shape.Sphere;
+import com.jme.scene.shape.Tube;
 import com.jme.scene.state.CullState;
 import com.jme.scene.state.MaterialState;
 import com.jme.util.TextureManager;
@@ -32,7 +32,6 @@ import com.jmex.audio.AudioSystem;
 import com.jmex.audio.AudioTrack;
 import com.jmex.model.converters.FormatConverter;
 import com.jmex.model.converters.MaxToJme;
-import com.jmex.model.converters.ObjToJme;
  
 /**
  * Started Date: Jul 24, 2004 <br>
@@ -192,30 +191,32 @@ public class HelloWorld extends SimpleGame {
 	}
  
 	class FireBullet extends KeyInputAction {
-		int numBullets;
+		int numLasors;
  
 		public void performAction(InputActionEvent evt) {
 			logger.info("BANG");
 			/** Create bullet */
-			Sphere bullet = new Sphere("bullet" + numBullets++, 32, 32, .25f);
-			bullet.setModelBound(new BoundingSphere());
-			bullet.updateModelBound();
+			Tube lasor = new Tube("lasor" + numLasors++, 0.1f, 0.01f, 1.0f);
+			lasor.rotateUpTo(cam.getDirection());
+			lasor.setModelBound(new BoundingBox());
+			lasor.updateModelBound();
 			/** Move bullet to the camera location */
-			bullet.setLocalTranslation(new Vector3f(cam.getLocation()));
-			bullet.setRenderState(bulletMaterial);
+			Vector3f lasorDir = new Vector3f(1.0f, 1.0f, 1.0f);
+			lasor.setLocalTranslation(lasorDir.add(new Vector3f(cam.getLocation())));
+			lasor.setRenderState(bulletMaterial);
 			/**
 			 * Update the new world locaion for the bullet before I add a
 			 * controller
 			 */
-			bullet.updateGeometricState(0, true);
+			lasor.updateGeometricState(0, true);
 			/**
 			 * Add a movement controller to the bullet going in the camera's
 			 * direction
 			 */
-			bullet.addController(new BulletMover(bullet, new Vector3f(cam
+			lasor.addController(new BulletMover(lasor, new Vector3f(cam
 					.getDirection())));
-			rootNode.attachChild(bullet);
-			bullet.updateRenderState();
+			rootNode.attachChild(lasor);
+			lasor.updateRenderState();
 			/** Signal our sound to play laser during rendering */
 			laserSound.setWorldPosition(cam.getLocation());
 			laserSound.play();
