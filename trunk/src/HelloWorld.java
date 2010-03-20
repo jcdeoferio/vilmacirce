@@ -2,7 +2,12 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URL;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Random;
+import java.util.UUID;
+import java.util.Map.Entry;
 import java.util.logging.Level;
 import java.util.logging.Logger;
  
@@ -11,6 +16,7 @@ import com.jme.bounding.BoundingBox;
 import com.jme.bounding.BoundingSphere;
 import com.jme.image.Texture;
 import com.jme.input.InputHandler;
+import com.jme.input.KeyInput;
 import com.jme.input.action.InputActionEvent;
 import com.jme.input.action.KeyInputAction;
 import com.jme.math.Vector3f;
@@ -43,12 +49,21 @@ import com.jmex.model.converters.MaxToJme;
 public class HelloWorld extends SimpleGame {
 	private static final Logger logger = Logger
 			.getLogger(HelloWorld.class.getName());
+	
+//	Node ties;
+	
+//	Node lasers;
  
 	/** Material for my bullet */
 	MaterialState bulletMaterial;
  
 	/** Target you're trying to hit */
-	Node target;
+//	Node target;
+	ByteArrayInputStream targetModel;
+	
+	HashMap<UUID, Node> targets;
+	
+	List<Tube> lasers;
  
 	/** Location of laser sound */
 	URL laserURL;
@@ -91,41 +106,38 @@ public class HelloWorld extends SimpleGame {
 		rootNode.setCullHint(Spatial.CullHint.Never);
  
 		/**
-		 * Set the action called "firebullet", bound to KEY_F, to performAction
+		 * Set the action called "firebullet", bound to DEVICE_MOUSE, to performAction
 		 * FireBullet
 		 */
 		input.addAction(new FireBullet(), InputHandler.DEVICE_MOUSE, InputHandler.BUTTON_ALL, InputHandler.AXIS_NONE, true);
+		
+		input.addAction(new SpawnTieFighter(), "spawntiefighter", KeyInput.KEY_F, false);
  
 		/** Make bullet material */
 		bulletMaterial = display.getRenderer().createMaterialState();
 		bulletMaterial.setEmissive(ColorRGBA.green.clone());
- 
-		/** Make target material */
-		// Point to a URL of my model
-		URL model = HelloWorld.class.getClassLoader().getResource(
-			"jmetest/data/model/models/tie/TIEF.3DS");
- 
-		// Create something to convert .3ds format to .jme
-		FormatConverter converter = new MaxToJme();
- 
-		// This byte array will hold my .jme file
+	
 		ByteArrayOutputStream BO = new ByteArrayOutputStream();
-		try {
-			// Use the format converter to convert .3ds to .jme
+		try{
+			/** Make target material */
+			// Point to a URL of my model
+			URL model = HelloWorld.class.getClassLoader().getResource(
+				"jmetest/data/model/models/tie/TIEF.3DS");
+	 
+			// Create something to convert .3ds format to .jme
+			FormatConverter converter = new MaxToJme();
 			converter.convert(model.openStream(), BO);
-			target = (Node) BinaryImporter.getInstance().load(
-				new ByteArrayInputStream(BO.toByteArray()));
-			target.rotateUpTo(new Vector3f(0.0f, 0.0f, 1.0f));
-			target.setModelBound(new BoundingSphere());
-			target.updateModelBound();
-			// Put her on the scene graph
-			rootNode.attachChild(target);
+			
+			targetModel = new ByteArrayInputStream(BO.toByteArray());
+			
 		} catch (IOException e) { // Just in case anything happens
 			logger.logp(Level.SEVERE, this.getClass().toString(),
 				"simpleInitGame()", "Exception", e);
 			System.exit(0);
 		}
-
+		
+		targets = new HashMap<UUID, Node>();
+		lasers = new LinkedList<Tube>();
 	}
  
 	private void setupSound() {
@@ -185,6 +197,43 @@ public class HelloWorld extends SimpleGame {
  
 		sb.updateRenderState();
 	}
+	
+	class SpawnTieFighter extends KeyInputAction{
+
+		@Override
+		public void performAction(InputActionEvent evt) {
+			/** Make target material */
+			// Point to a URL of my model
+			URL model = HelloWorld.class.getClassLoader().getResource(
+				"jmetest/data/model/models/tie/TIEF.3DS");
+	 
+			// Create something to convert .3ds format to .jme
+			FormatConverter converter = new MaxToJme();
+	 
+			// This byte array will hold my .jme file
+			ByteArrayOutputStream BO = new ByteArrayOutputStream();
+			try {
+				// Use the format converter to convert .3ds to .jme
+				converter.convert(model.openStream(), BO);
+				Node target = (Node) BinaryImporter.getInstance().load(
+					new ByteArrayInputStream(BO.toByteArray()));
+				target.rotateUpTo(new Vector3f(0.0f, 0.0f, 1.0f));
+				target.setModelBound(new BoundingSphere());
+				target.updateModelBound();
+				// Put her on the scene graph
+				rootNode.attachChild(target);
+				
+				rootNode.updateRenderState();
+				
+				targets.put(UUID.randomUUID(), target);
+			} catch (IOException e) { // Just in case anything happens
+				logger.logp(Level.SEVERE, this.getClass().toString(),
+					"simpleInitGame()", "Exception", e);
+				System.exit(0);
+			}
+		}
+		
+	}
  
 	class FireBullet extends KeyInputAction {
 		int numLasors;
@@ -217,6 +266,9 @@ public class HelloWorld extends SimpleGame {
 			lasor.addController(new BulletMover(lasor, new Vector3f(cam
 					.getDirection())));
 			rootNode.attachChild(lasor);
+			
+			lasers.add(lasor);
+			
 			lasor.updateRenderState();
 			/** Signal our sound to play laser during rendering */
 			laserSound.setWorldPosition(cam.getLocation());
@@ -256,17 +308,20 @@ public class HelloWorld extends SimpleGame {
 			Vector3f bulletPos = bullet.getLocalTranslation();
 			bulletPos.addLocal(direction.mult(time * speed));
 			bullet.setLocalTranslation(bulletPos);
-			/** Does the bullet intersect with target? */
-			if (bullet.getWorldBound().intersects(target.getWorldBound())) {
-				logger.info("OWCH!!!");
-				targetSound.setWorldPosition(target.getWorldTranslation());
- 
-				target.setLocalTranslation(new Vector3f(r.nextFloat() * 10, r
-						.nextFloat() * 10, r.nextFloat() * 10));
- 
-				lifeTime = 0;
- 
-				targetSound.play();
+			/** Does the bullet intersect with a target? */
+			for(Node target : targets.values()){
+				
+				if (bullet.getWorldBound().intersects(target.getWorldBound())) {
+					logger.info("OWCH!!!");
+					targetSound.setWorldPosition(target.getWorldTranslation());
+	 
+					target.setLocalTranslation(new Vector3f(r.nextFloat() * 10, r
+							.nextFloat() * 10, r.nextFloat() * 10));
+	 
+					lifeTime = 0;
+	 
+					targetSound.play();
+				}
 			}
 		}
 	}
@@ -280,6 +335,8 @@ public class HelloWorld extends SimpleGame {
 		// Move the skybox into position
 		sb.getLocalTranslation().set(cam.getLocation().x, cam.getLocation().y,
 				cam.getLocation().z);
+		
+//		target.setLocalTranslation(new Vector3f(0, 0, target.getLocalTranslation().z + 0.5f)); //moving tie target
 	}
  
 	@Override
@@ -288,5 +345,65 @@ public class HelloWorld extends SimpleGame {
 		if (AudioSystem.isCreated()) {
 			AudioSystem.getSystem().cleanup();
 		}
+	}
+	
+	Node getRootNode(){
+		return(rootNode);
+	}
+	
+	void setRootNode(Node rootNode){
+		this.rootNode = rootNode;
+		this.rootNode.updateRenderState();
+	}
+	
+	LinkedList<Fighter> getFighters(){
+		LinkedList<Fighter> fighters = new LinkedList<Fighter>();
+		
+		for(Entry<UUID, Node> targetEntry : targets.entrySet()){
+			UUID targetUUID = targetEntry.getKey();
+			Node target = targetEntry.getValue();
+			
+			fighters.add(new Fighter(targetUUID, target));
+		}
+		
+		return(fighters);
+	}
+	
+	void setFighters(LinkedList<Fighter> fighters){
+		if(targetModel == null || targets == null)
+			return;
+		
+		for(Fighter fighter : fighters){
+			Node target = null;
+			if(targets.containsKey(fighter.getUUID())){
+				target = targets.get(fighter.getUUID());				
+			}
+			else{
+				try {
+					targetModel.reset();
+					// Use the format converter to convert .3ds to .jme
+					target = (Node) BinaryImporter.getInstance().load(targetModel);
+					target.setModelBound(new BoundingSphere());
+					target.updateModelBound();
+					// Put her on the scene graph
+					rootNode.attachChild(target);
+					
+					target.updateRenderState();
+					
+					targets.put(fighter.getUUID(), target);
+				} catch (IOException e) { // Just in case anything happens
+					logger.logp(Level.SEVERE, this.getClass().toString(),
+						"simpleInitGame()", "Exception", e);
+					System.exit(0);
+				}
+			}
+			
+			target.setLocalRotation(fighter.getLocalRotation());
+			target.setLocalTranslation(fighter.getLocalTranslation());
+		}
+	}
+	
+	List<Tube> getLasers(){
+		return(lasers);
 	}
 }

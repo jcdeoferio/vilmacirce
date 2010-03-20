@@ -29,7 +29,7 @@ public class MyServer {
 		public void run(){
 			app = new HelloWorld();
 			app.setConfigShowMode(ConfigShowMode.AlwaysShow);
-			app.start();		
+			app.start();
 		}
 	}
 
@@ -47,7 +47,15 @@ public class MyServer {
 			System.out.println(getName() + ": " + clientip + " connected!");
 			
 			while(true){
+				if(app != null)
+					if(!conn.sendObject(app.getFighters()))
+						break;
 				
+				try {
+					Thread.sleep(50);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
 			}
 		}
 	}
