@@ -47,12 +47,16 @@ public class MyServer {
 			System.out.println(getName() + ": " + clientip + " connected!");
 			
 			while(true){
-				if(app != null)
+				if(app != null){
 					if(!conn.sendObject(app.getFighters()))
 						break;
+					
+					if(!conn.sendObject(app.getLasers()))
+						break;
+				}
 				
 				try {
-					Thread.sleep(50);
+					Thread.sleep(250);
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				}

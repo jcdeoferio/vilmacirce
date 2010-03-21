@@ -46,8 +46,8 @@ public class MyConnection {
 	}
 	
 	public boolean sendObject(Serializable obj){
-		System.out.println("Sending:"+obj);
-		System.out.println("Thru:"+oout);
+//		System.out.println("Sending:"+obj);
+
 		try {
 //			jmee.save(sav, oout);
 			oout.writeObject(obj);
@@ -55,7 +55,7 @@ public class MyConnection {
 			e.printStackTrace();
 			return(false);
 		}
-		System.out.println("Done sending");
+//		System.out.println("Done sending");
 		return(true);
 	}
 	
