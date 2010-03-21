@@ -1,3 +1,4 @@
+package game;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -9,6 +10,9 @@ import java.util.UUID;
 import java.util.Map.Entry;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import util.Fighter;
+import util.SerializableSpatial;
  
 import com.jme.app.SimpleGame;
 import com.jme.bounding.BoundingBox;
@@ -46,9 +50,9 @@ import com.jmex.model.converters.MaxToJme;
  * 
  * @author Jack Lindamood
  */
-public class HelloWorld extends SimpleGame {
+public class GameInterface extends SimpleGame {
 	private static final Logger logger = Logger
-			.getLogger(HelloWorld.class.getName());
+			.getLogger(GameInterface.class.getName());
 	
 //	Node ties;
 	
@@ -123,7 +127,7 @@ public class HelloWorld extends SimpleGame {
 		try{
 			/** Make target material */
 			// Point to a URL of my model
-			URL model = HelloWorld.class.getClassLoader().getResource(
+			URL model = GameInterface.class.getClassLoader().getResource(
 				"jmetest/data/model/models/tie/TIEF.3DS");
 	 
 			// Create something to convert .3ds format to .jme
@@ -305,7 +309,9 @@ public class HelloWorld extends SimpleGame {
 			bulletPos.addLocal(direction.mult(time * speed));
 			bullet.setLocalTranslation(bulletPos);
 			/** Does the bullet intersect with a target? */
-			for(Spatial target : targets.values()){
+			for(Entry<UUID, Spatial> targetEntry: targets.entrySet()){
+				Spatial target = targetEntry.getValue();
+				UUID targetuuid = targetEntry.getKey();
 				
 				if (bullet.getWorldBound().intersects(target.getWorldBound())) {
 					logger.info("OWCH!!!");
@@ -313,6 +319,8 @@ public class HelloWorld extends SimpleGame {
 	 
 					target.setLocalTranslation(new Vector3f(r.nextFloat() * 10, r
 							.nextFloat() * 10, r.nextFloat() * 10));
+//					target.removeFromParent();
+//					targets.remove(targetuuid);
 	 
 					lifeTime = 0;
 	 
@@ -352,7 +360,7 @@ public class HelloWorld extends SimpleGame {
 		this.rootNode.updateRenderState();
 	}
 	
-	LinkedList<Fighter> getFighters(){
+	public LinkedList<Fighter> getFighters(){
 		LinkedList<Fighter> fighters = new LinkedList<Fighter>();
 		
 		if(targets == null)
@@ -368,14 +376,17 @@ public class HelloWorld extends SimpleGame {
 		return(fighters);
 	}
 	
-	void setFighters(LinkedList<Fighter> fighters){
+	public void setFighters(LinkedList<Fighter> fighters){
 		if(targetModel == null || targets == null)
 			return;
+		
+		HashMap<UUID,Spatial> targetsToBeRemoved = new HashMap<UUID, Spatial>(targets);
 		
 		for(Fighter fighter : fighters){
 			Spatial target = null;
 			if(targets.containsKey(fighter.getUUID())){
-				target = targets.get(fighter.getUUID());				
+				target = targets.get(fighter.getUUID());
+				targetsToBeRemoved.remove(fighter.getUUID());
 			}
 			else{
 //				try {
@@ -403,9 +414,15 @@ public class HelloWorld extends SimpleGame {
 			target.setLocalRotation(fighter.getLocalRotation());
 			target.setLocalTranslation(fighter.getLocalTranslation());
 		}
+		for(Entry<UUID, Spatial> targetEntry : targetsToBeRemoved.entrySet()){
+			UUID targetUUID = targetEntry.getKey();
+			Spatial target = targetEntry.getValue();
+			target.removeFromParent();
+			targets.remove(targetUUID);
+		}
 	}
 	
-	LinkedList<SerializableSpatial> getLasers(){
+	public LinkedList<SerializableSpatial> getLasers(){
 		LinkedList<SerializableSpatial> serLasers = new LinkedList<SerializableSpatial>();
 		
 		if(lasers == null)
@@ -418,7 +435,7 @@ public class HelloWorld extends SimpleGame {
 		return(serLasers);
 	}
 	
-	void setLasers(LinkedList<SerializableSpatial> serLasers){
+	public void setLasers(LinkedList<SerializableSpatial> serLasers){
 		if(laserNode == null || lasers == null)
 			return;
 	
