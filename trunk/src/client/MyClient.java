@@ -1,15 +1,21 @@
+package client;
+
+import game.GameInterface;
+
 import java.io.IOException;
 import java.net.Socket;
 import java.util.LinkedList;
 import java.util.Scanner;
 
-import com.jme.app.AbstractGame.ConfigShowMode;
-import com.jme.scene.Node;
+import util.Fighter;
+import util.MyConnection;
+import util.SerializableSpatial;
 
+import com.jme.app.AbstractGame.ConfigShowMode;
 
 public class MyClient {
 
-	static HelloWorld app = null;
+	static GameInterface app = null;
 	
 	public static void main(String[] args) {		
 		Scanner sc = new Scanner(System.in);
@@ -19,9 +25,9 @@ public class MyClient {
 			String line = sc.nextLine();
 			String servIP = line.equals("")?"127.0.0.1":line;
 			
-			System.out.print("Host port [8888]: ");
+			System.out.print("Host port [9999]: ");
 			line = sc.nextLine().trim();
-			int servPort = line.equals("")?8888:Integer.parseInt(line);
+			int servPort = line.equals("")?9999:Integer.parseInt(line);
 			
 			System.out.println("Client: Connecting to server " + servIP + ":" + servPort);
 			Socket socket = new Socket(servIP, servPort);
@@ -40,7 +46,7 @@ public class MyClient {
 	
 	static class ClientGame extends Thread{
 		public void run(){
-			app = new HelloWorld();
+			app = new GameInterface();
 			app.setConfigShowMode(ConfigShowMode.AlwaysShow);
 			app.start();
 		}

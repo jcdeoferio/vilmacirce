@@ -1,18 +1,24 @@
+package server;
+
+import game.GameInterface;
+
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+
+import util.MyConnection;
 
 import com.jme.app.AbstractGame.ConfigShowMode;
 
 public class MyServer {
 	
-	static HelloWorld app = null;
+	static GameInterface app = null;
 
 	public static void main(String[] args) {
 		new ServerGame().start();
 		
 		try{
-			ServerSocket ssocket = new ServerSocket(8888);
+			ServerSocket ssocket = new ServerSocket(9999);
 			while(true){
 				System.out.println("Server: waiting for connections...");
 				Socket socket = ssocket.accept();
@@ -27,7 +33,7 @@ public class MyServer {
 	
 	static class ServerGame extends Thread{
 		public void run(){
-			app = new HelloWorld();
+			app = new GameInterface();
 			app.setConfigShowMode(ConfigShowMode.AlwaysShow);
 			app.start();
 		}
