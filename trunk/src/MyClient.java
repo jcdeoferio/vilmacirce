@@ -11,9 +11,7 @@ public class MyClient {
 
 	static HelloWorld app = null;
 	
-	public static void main(String[] args) {
-		new ClientGame().start();
-		
+	public static void main(String[] args) {		
 		Scanner sc = new Scanner(System.in);
 		
 		try{
@@ -34,7 +32,10 @@ public class MyClient {
 		catch(Exception e){
 			System.err.println("MyClient: Error happened!");
 			e.printStackTrace();
+			System.exit(1);
 		}
+		
+		new ClientGame().start();
 	}
 	
 	static class ClientGame extends Thread{
@@ -57,13 +58,23 @@ public class MyClient {
 		@SuppressWarnings("unchecked")
 		public void run(){
 			try{
+				int counter = 0;
 				while(true){
+					if(counter == 0){
+						System.out.println("app = "+app);
+						counter++;
+					}
 					if(app != null){
+						if(counter == 1){
+							System.out.println("got fighters");
+							counter++;
+						}
 						LinkedList<Fighter> fighters = (LinkedList<Fighter>)conn.getObject();
 						app.setFighters(fighters);
+						
+						LinkedList<SerializableSpatial> lasers = (LinkedList<SerializableSpatial>)conn.getObject();
+						app.setLasers(lasers);
 					}
-					
-					Thread.sleep(100);
 				}
 			}
 			catch(Exception e){

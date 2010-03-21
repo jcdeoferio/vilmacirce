@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Random;
 import java.util.UUID;
 import java.util.Map.Entry;
@@ -27,6 +26,7 @@ import com.jme.scene.Skybox;
 import com.jme.scene.Spatial;
 import com.jme.scene.Text;
 import com.jme.scene.TriMesh;
+import com.jme.scene.shape.Sphere;
 import com.jme.scene.shape.Tube;
 import com.jme.scene.state.CullState;
 import com.jme.scene.state.MaterialState;
@@ -61,9 +61,11 @@ public class HelloWorld extends SimpleGame {
 //	Node target;
 	ByteArrayInputStream targetModel;
 	
-	HashMap<UUID, Node> targets;
+	Node laserNode;
 	
-	List<Tube> lasers;
+	volatile HashMap<UUID, Spatial> targets;
+	
+	volatile HashMap<UUID, Tube> lasers;
  
 	/** Location of laser sound */
 	URL laserURL;
@@ -136,8 +138,11 @@ public class HelloWorld extends SimpleGame {
 			System.exit(0);
 		}
 		
-		targets = new HashMap<UUID, Node>();
-		lasers = new LinkedList<Tube>();
+		laserNode = new Node("laserNode");
+		rootNode.attachChild(laserNode);
+		
+		targets = new HashMap<UUID, Spatial>();
+		lasers = new HashMap<UUID, Tube>();
 	}
  
 	private void setupSound() {
@@ -202,22 +207,12 @@ public class HelloWorld extends SimpleGame {
 
 		@Override
 		public void performAction(InputActionEvent evt) {
-			/** Make target material */
-			// Point to a URL of my model
-			URL model = HelloWorld.class.getClassLoader().getResource(
-				"jmetest/data/model/models/tie/TIEF.3DS");
-	 
-			// Create something to convert .3ds format to .jme
-			FormatConverter converter = new MaxToJme();
-	 
-			// This byte array will hold my .jme file
-			ByteArrayOutputStream BO = new ByteArrayOutputStream();
-			try {
-				// Use the format converter to convert .3ds to .jme
-				converter.convert(model.openStream(), BO);
-				Node target = (Node) BinaryImporter.getInstance().load(
-					new ByteArrayInputStream(BO.toByteArray()));
-				target.rotateUpTo(new Vector3f(0.0f, 0.0f, 1.0f));
+//			try {
+//				targetModel.reset();
+//				Node target = (Node) BinaryImporter.getInstance().load(targetModel);
+//				target.rotateUpTo(new Vector3f(0.0f, 0.0f, 1.0f));
+				UUID targetUUID = UUID.randomUUID();
+				Spatial target = new Sphere(targetUUID.toString(), 16, 16, 5);
 				target.setModelBound(new BoundingSphere());
 				target.updateModelBound();
 				// Put her on the scene graph
@@ -226,11 +221,11 @@ public class HelloWorld extends SimpleGame {
 				rootNode.updateRenderState();
 				
 				targets.put(UUID.randomUUID(), target);
-			} catch (IOException e) { // Just in case anything happens
-				logger.logp(Level.SEVERE, this.getClass().toString(),
-					"simpleInitGame()", "Exception", e);
-				System.exit(0);
-			}
+//			} catch (IOException e) { // Just in case anything happens
+//				logger.logp(Level.SEVERE, this.getClass().toString(),
+//					"simpleInitGame()", "Exception", e);
+//				System.exit(0);
+//			}
 		}
 		
 	}
@@ -265,9 +260,9 @@ public class HelloWorld extends SimpleGame {
 			 */
 			lasor.addController(new BulletMover(lasor, new Vector3f(cam
 					.getDirection())));
-			rootNode.attachChild(lasor);
+			laserNode.attachChild(lasor);
 			
-			lasers.add(lasor);
+			lasers.put(UUID.randomUUID(), lasor);
 			
 			lasor.updateRenderState();
 			/** Signal our sound to play laser during rendering */
@@ -300,8 +295,9 @@ public class HelloWorld extends SimpleGame {
 			lifeTime -= time;
 			/** If life is gone, remove it */
 			if (lifeTime < 0) {
-				rootNode.detachChild(bullet);
+				laserNode.detachChild(bullet);
 				bullet.removeController(this);
+				lasers.remove(bullet);
 				return;
 			}
 			/** Move bullet */
@@ -309,7 +305,7 @@ public class HelloWorld extends SimpleGame {
 			bulletPos.addLocal(direction.mult(time * speed));
 			bullet.setLocalTranslation(bulletPos);
 			/** Does the bullet intersect with a target? */
-			for(Node target : targets.values()){
+			for(Spatial target : targets.values()){
 				
 				if (bullet.getWorldBound().intersects(target.getWorldBound())) {
 					logger.info("OWCH!!!");
@@ -359,9 +355,12 @@ public class HelloWorld extends SimpleGame {
 	LinkedList<Fighter> getFighters(){
 		LinkedList<Fighter> fighters = new LinkedList<Fighter>();
 		
-		for(Entry<UUID, Node> targetEntry : targets.entrySet()){
+		if(targets == null)
+			return(fighters);
+		
+		for(Entry<UUID, Spatial> targetEntry : targets.entrySet()){
 			UUID targetUUID = targetEntry.getKey();
-			Node target = targetEntry.getValue();
+			Spatial target = targetEntry.getValue();
 			
 			fighters.add(new Fighter(targetUUID, target));
 		}
@@ -374,28 +373,31 @@ public class HelloWorld extends SimpleGame {
 			return;
 		
 		for(Fighter fighter : fighters){
-			Node target = null;
+			Spatial target = null;
 			if(targets.containsKey(fighter.getUUID())){
 				target = targets.get(fighter.getUUID());				
 			}
 			else{
-				try {
-					targetModel.reset();
-					// Use the format converter to convert .3ds to .jme
-					target = (Node) BinaryImporter.getInstance().load(targetModel);
+//				try {
+//					targetModel.reset();
+//					// Use the format converter to convert .3ds to .jme
+//					target = (Node) BinaryImporter.getInstance().load(targetModel);
+					UUID targetUUID = fighter.getUUID();
+					target = new Sphere(targetUUID.toString(), 16, 16, 5);
 					target.setModelBound(new BoundingSphere());
 					target.updateModelBound();
 					// Put her on the scene graph
 					rootNode.attachChild(target);
 					
-					target.updateRenderState();
+					rootNode.updateRenderState();
 					
 					targets.put(fighter.getUUID(), target);
-				} catch (IOException e) { // Just in case anything happens
-					logger.logp(Level.SEVERE, this.getClass().toString(),
-						"simpleInitGame()", "Exception", e);
-					System.exit(0);
-				}
+				
+//				} catch (IOException e) { // Just in case anything happens
+//					logger.logp(Level.SEVERE, this.getClass().toString(),
+//						"simpleInitGame()", "Exception", e);
+//					System.exit(0);
+//				}
 			}
 			
 			target.setLocalRotation(fighter.getLocalRotation());
@@ -403,7 +405,52 @@ public class HelloWorld extends SimpleGame {
 		}
 	}
 	
-	List<Tube> getLasers(){
-		return(lasers);
+	LinkedList<SerializableSpatial> getLasers(){
+		LinkedList<SerializableSpatial> serLasers = new LinkedList<SerializableSpatial>();
+		
+		if(lasers == null)
+			return(serLasers);
+		
+		for(Entry<UUID, Tube> laser : lasers.entrySet()){
+			serLasers.add(new SerializableSpatial(laser.getKey(), laser.getValue()));
+		}
+		
+		return(serLasers);
+	}
+	
+	void setLasers(LinkedList<SerializableSpatial> serLasers){
+		if(laserNode == null || lasers == null)
+			return;
+	
+//		for(Tube laser : lasers.values())
+//			rootNode.detachChild(laser);
+		
+		laserNode.detachAllChildren();
+		
+		lasers = new HashMap<UUID, Tube>();
+		
+		for(SerializableSpatial serLaser : serLasers){
+			Tube laser = null;
+			if(lasers.containsKey(serLaser.getUUID())){
+				laser = lasers.get(serLaser.getUUID());
+			}
+			else{
+				laser = new Tube(serLaser.getUUID().toString(), 0.1f, 0.01f, 1.0f);
+				laser.setModelBound(new BoundingBox());
+				laser.updateModelBound();
+				laser.setRenderState(bulletMaterial);
+				
+				laser.updateGeometricState(0, true);
+
+				laserNode.attachChild(laser);
+				
+				lasers.put(serLaser.getUUID(), laser);
+				
+				laser.updateRenderState();
+			}
+			
+			laser.setLocalRotation(serLaser.getLocalRotation());
+			laser.setLocalTranslation(serLaser.getLocalTranslation());
+		}
 	}
 }
