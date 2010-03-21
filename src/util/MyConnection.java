@@ -78,8 +78,14 @@ public class MyConnection {
 		return(true);
 	}
 	
-	public String getMessage() throws IOException{
-		return(sin.readLine());
+	public String getMessage(){
+		while(true){
+			try{
+				return(sin.readLine());		
+			}catch(IOException e){
+				e.printStackTrace();
+			}
+		}
 	}
 	
 }

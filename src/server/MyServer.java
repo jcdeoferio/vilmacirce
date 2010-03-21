@@ -2,65 +2,101 @@ package server;
 
 import game.GameInterface;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Scanner;
+import java.util.Map.Entry;
+import java.util.concurrent.TimeUnit;
 
 import util.MyConnection;
+import util.User;
 
 import com.jme.app.AbstractGame.ConfigShowMode;
 
 public class MyServer {
-	
-	static GameInterface app = null;
 
 	public static void main(String[] args) {
-		new ServerGame().start();
-		
-		try{
-			ServerSocket ssocket = new ServerSocket(9999);
-			while(true){
+		new MyServer(9999).start();
+	}
+
+	static GameInterface app = null;
+	HashMap<String, MyConnection> loggedInUsersSockets;
+	HashMap<String, Integer> loggedInUsersScores;
+	int port;
+
+	public MyServer(int port) {
+		this.port = port;
+	}
+
+	public void start() {
+		// new ServerGame().start();
+		try {
+			loggedInUsersSockets = new HashMap<String, MyConnection>();
+			loggedInUsersScores = new HashMap<String, Integer>();
+
+			ServerSocket ssocket = new ServerSocket(port);
+			while (true) {
 				System.out.println("Server: waiting for connections...");
 				Socket socket = ssocket.accept();
 				new ServerThread(socket).start();
 			}
-		}
-		catch(Exception e){
+		} catch (Exception e) {
 			System.err.println("MyServer: Server error happened!");
 			e.printStackTrace();
 		}
 	}
-	
-	static class ServerGame extends Thread{
-		public void run(){
+
+	class ServerGame extends Thread {
+		public void run() {
 			app = new GameInterface();
 			app.setConfigShowMode(ConfigShowMode.AlwaysShow);
 			app.start();
 		}
 	}
 
-	static class ServerThread extends Thread{
+	class ServerThread extends Thread {
 		private Socket socket;
 		private MyConnection conn;
-		
-		public ServerThread(Socket socket) throws IOException{
+
+		public ServerThread(Socket socket) throws IOException {
 			this.socket = socket;
 			this.conn = new MyConnection(socket);
 		}
-		
-		public void run(){
-			String clientip = socket.getInetAddress().toString();
+
+		public void run() {
+			String clientip = socket.getInetAddress().toString() + ":"
+					+ socket.getPort();
 			System.out.println(getName() + ": " + clientip + " connected!");
-			
-			while(true){
-				if(app != null){
-					if(!conn.sendObject(app.getFighters()))
-						break;
-					
-					if(!conn.sendObject(app.getLasers()))
-						break;
+
+			loggedInUsersSockets.put(clientip, conn);
+			loggedInUsersScores.put(clientip, 0);
+
+			while (true) {
+				String msg = conn.getMessage();
+				if (msg.startsWith("DONE")) {
+					String line[] = msg.split(" ");
+					String username = line[0];
+					String score = line[1];
+					String time = line[2];
+					// save to file if top 10
+				} else {
+					loggedInUsersScores.put(clientip, Integer.parseInt(msg));
+					for (Entry<String, MyConnection> entry : loggedInUsersSockets
+							.entrySet()) {
+						int thisScore = loggedInUsersScores.get(clientip);
+						int otherScore = loggedInUsersScores
+								.get(entry.getKey());
+						if (thisScore > otherScore
+								&& thisScore - otherScore >= 10) {
+							entry.getValue().sendMessage(
+									"SPAWN " + (thisScore - otherScore) / 10);
+						}
+					}
 				}
-				
 				try {
 					Thread.sleep(250);
 				} catch (InterruptedException e) {
@@ -69,5 +105,4 @@ public class MyServer {
 			}
 		}
 	}
-
 }
