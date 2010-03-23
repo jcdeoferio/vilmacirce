@@ -44,7 +44,10 @@ class BulletMover extends Controller {
 		
 		/** If life is gone, remove it */
 		if (lifeTime < 0) {
-			game.getRootNode().detachChild(bullet);
+			synchronized (game) {
+				game.getRootNode().detachChild(bullet);
+			}
+			
 			bullet.removeController(this);
 			return;
 		}
