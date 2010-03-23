@@ -8,6 +8,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Random;
 import java.util.Scanner;
 import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
@@ -24,7 +25,7 @@ public class MyServer {
 	}
 
 	static GameInterface app = null;
-	HashMap<String, MyConnection> loggedInUsersSockets;
+	HashMap<String, MyConnection> loggedInUsersConns;
 	HashMap<String, Integer> loggedInUsersScores;
 	int port;
 
@@ -33,16 +34,26 @@ public class MyServer {
 	}
 
 	public void start() {
-//		 new ServerGame().start();
+		// new ServerGame().start();
 		try {
-			loggedInUsersSockets = new HashMap<String, MyConnection>();
+			loggedInUsersConns = new HashMap<String, MyConnection>();
 			loggedInUsersScores = new HashMap<String, Integer>();
 
 			ServerSocket ssocket = new ServerSocket(port);
 			while (true) {
 				System.out.println("Server: waiting for connections...");
 				Socket socket = ssocket.accept();
-				new ServerThread(socket).start();
+				MyConnection conn = new MyConnection(socket);
+				String clientip = socket.getInetAddress().toString() + ":"
+						+ socket.getPort();
+
+				System.out.println("MyServer: " + clientip + " connected!");
+
+				loggedInUsersConns.put(clientip, conn);
+				loggedInUsersScores.put(clientip, 0);
+
+				new ServerWaiterThread(socket, conn, clientip).start();
+				new ServerSenderThread(socket, conn, clientip).start();
 			}
 		} catch (Exception e) {
 			System.err.println("MyServer: Server error happened!");
@@ -58,36 +69,65 @@ public class MyServer {
 		}
 	}
 
-	class ServerThread extends Thread {
+	class ServerSenderThread extends Thread {
 		private Socket socket;
 		private MyConnection conn;
+		private String clientip;
+		private Random rand;
 
-		public ServerThread(Socket socket) throws IOException {
+		public ServerSenderThread(Socket socket, MyConnection conn,
+				String clientip) throws IOException {
 			this.socket = socket;
-			this.conn = new MyConnection(socket);
+			this.conn = conn;
+			this.clientip = clientip;
+			rand = new Random();
 		}
 
 		public void run() {
-			String clientip = socket.getInetAddress().toString() + ":"
-					+ socket.getPort();
-			System.out.println(getName() + ": " + clientip + " connected!");
+			while (true) {
+				conn.sendMessage("SPAWN " + (rand.nextInt(10)+5));
+				try {
+					Thread.sleep(Math.abs(rand.nextLong()) % (30000));
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+					continue;
+				}
+			}
+		}
+	}
 
-			loggedInUsersSockets.put(clientip, conn);
-			loggedInUsersScores.put(clientip, 0);
-			
+	class ServerWaiterThread extends Thread {
+		private Socket socket;
+		private MyConnection conn;
+		private String clientip;
+
+		public ServerWaiterThread(Socket socket, MyConnection conn,
+				String clientip) throws IOException {
+			this.socket = socket;
+			this.conn = conn;
+			this.clientip = clientip;
+		}
+
+		public void run() {
 			while (true) {
 				String msg = conn.getMessage();
-				if (msg.startsWith("DONE")) { //client died/quit game FORMAT: DONE username score time
+				if (msg.startsWith("DONE")) { // client died/quit game FORMAT:
+					// DONE username score time
 					String line[] = msg.split(" ");
 					String username = line[0];
 					String score = line[1];
 					String time = line[2];
 					// TODO save to file if top 10
-				} else { //Score update from client every time a tie fighter dies? FORMAT: score 
-					loggedInUsersScores.put(clientip, Integer.parseInt(msg));
-					for (Entry<String, MyConnection> entry : loggedInUsersSockets
+
+					loggedInUsersConns.remove(clientip);
+					loggedInUsersScores.remove(clientip);
+					break;
+				} else { // Score update from client every time a tie fighter
+					// dies? FORMAT: score
+					int thisScore = Integer.parseInt(msg);
+					loggedInUsersScores.put(clientip, thisScore);
+					for (Entry<String, MyConnection> entry : loggedInUsersConns
 							.entrySet()) {
-						int thisScore = loggedInUsersScores.get(clientip);
 						int otherScore = loggedInUsersScores
 								.get(entry.getKey());
 						if (thisScore > otherScore

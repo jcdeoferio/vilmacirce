@@ -45,7 +45,7 @@ public class MyClient {
 
 	public void start() {
 		try {
-			new ClientThread(socket, conn).start();
+			new ClientWaiterThread(socket, conn, this).start();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

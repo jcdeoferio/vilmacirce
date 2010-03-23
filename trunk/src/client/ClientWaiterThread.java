@@ -1,5 +1,7 @@
 package client;
 
+import game.SpawnTieFighter;
+
 import java.io.IOException;
 import java.net.Socket;
 import java.util.regex.Matcher;
@@ -7,14 +9,17 @@ import java.util.regex.Pattern;
 
 import util.MyConnection;
 
-public class ClientThread extends Thread {
+public class ClientWaiterThread extends Thread {
 	private Socket socket;
 	private MyConnection conn;
 	private Pattern spawnMsgPattern;
+	private MyClient client;
 
-	public ClientThread(Socket socket, MyConnection conn) throws IOException {
+	public ClientWaiterThread(Socket socket, MyConnection conn,
+			MyClient myClient) throws IOException {
 		this.socket = socket;
 		this.conn = conn;
+		client = myClient;
 		spawnMsgPattern = Pattern.compile("SPAWN (\\d+)");
 	}
 
@@ -24,8 +29,11 @@ public class ClientThread extends Thread {
 			while (true) {
 				String str = conn.getMessage();
 				Matcher m = spawnMsgPattern.matcher(str);
+				System.out.println(str);
 				if (m.matches()) {
-					System.out.println(m.group(1));
+					int n = Integer.parseInt(m.group(1));
+					if (client.app != null && client.app.initialized)
+						SpawnTieFighter.spawnRandom(n, client.app);
 				}
 			}
 		} catch (Exception e) {
