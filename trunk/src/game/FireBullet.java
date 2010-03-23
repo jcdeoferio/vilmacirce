@@ -49,8 +49,6 @@ class FireBullet extends KeyInputAction {
 				.getDirection()), game));
 		game.getRootNode().attachChild(lasor);
 
-		game.lasers.put(UUID.randomUUID(), lasor);
-
 		lasor.updateRenderState();
 		/** Signal our sound to play laser during rendering */
 		laserSound.setWorldPosition(game.getCam().getLocation());

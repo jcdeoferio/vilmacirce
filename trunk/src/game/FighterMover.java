@@ -14,7 +14,7 @@ public class FighterMover extends Controller {
 	
 	private Fighter fighter;
 	private GameInterface game;
-	private float speed = 10;
+	private float speed = 20;
 	
 	public FighterMover(Fighter fighter, GameInterface game){
 		this.fighter = fighter;

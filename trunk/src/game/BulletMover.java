@@ -3,8 +3,11 @@ package game;
 import java.util.UUID;
 import java.util.Map.Entry;
 
+import util.Fighter;
+
 import com.jme.math.Vector3f;
 import com.jme.scene.Controller;
+import com.jme.scene.Node;
 import com.jme.scene.Spatial;
 import com.jme.scene.TriMesh;
 import com.jmex.audio.AudioTrack;
@@ -42,7 +45,6 @@ class BulletMover extends Controller {
 		if (lifeTime < 0) {
 			game.getRootNode().detachChild(bullet);
 			bullet.removeController(this);
-			game.lasers.remove(bullet);// should be the key not the value
 			return;
 		}
 		/** Move bullet */
@@ -50,8 +52,8 @@ class BulletMover extends Controller {
 		bulletPos.addLocal(direction.mult(time * speed));
 		bullet.setLocalTranslation(bulletPos);
 		/** Does the bullet intersect with a target? */
-		for (Entry<UUID, Spatial> targetEntry : game.targets.entrySet()) {
-			Spatial target = targetEntry.getValue();
+		for (Fighter targetFighter : game.getTargets()) {
+			Node target = targetFighter.getNode();
 
 			if (bullet.getWorldBound().intersects(target.getWorldBound())) {
 				GameInterface.getLogger().info("OWCH!!!");
@@ -60,7 +62,6 @@ class BulletMover extends Controller {
 				target.setLocalTranslation(new Vector3f(game.r.nextFloat() * 10, game.r
 						.nextFloat() * 10, game.r.nextFloat() * 10));
 //				 target.removeFromParent();
-				// targets.remove(targetuuid);
 
 				lifeTime = 0;
 

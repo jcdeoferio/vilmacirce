@@ -9,6 +9,7 @@ import java.net.URL;
 
 import com.jme.bounding.BoundingBox;
 import com.jme.math.Vector3f;
+import com.jme.renderer.Camera;
 import com.jme.scene.Node;
 import com.jme.util.export.binary.BinaryImporter;
 import com.jmex.model.converters.FormatConverter;
@@ -60,12 +61,8 @@ public class Fighter{
 		return(fighter);
 	}
 	
-	public static void spawnRandom(int n){
-		
-	}
-	
-	public static void spawnRandom(){
-		
+	public static Fighter newFighter() throws IOException{
+		return(new Fighter(newFighterNode()));
 	}
 	
 	public Node getNode(){

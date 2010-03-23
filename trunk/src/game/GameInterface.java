@@ -2,9 +2,8 @@ package game;
 
 import java.io.ByteArrayInputStream;
 import java.net.URL;
-import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Random;
-import java.util.UUID;
 import java.util.logging.Logger;
 
 import util.Fighter;
@@ -20,7 +19,6 @@ import com.jme.scene.Node;
 import com.jme.scene.Skybox;
 import com.jme.scene.Spatial;
 import com.jme.scene.Text;
-import com.jme.scene.shape.Tube;
 import com.jme.scene.state.CullState;
 import com.jme.scene.state.MaterialState;
 import com.jme.util.TextureManager;
@@ -58,9 +56,7 @@ public class GameInterface extends SimpleGame {
 	// Node target;
 	ByteArrayInputStream targetModel;
 
-	HashMap<UUID, Spatial> targets;
-
-	HashMap<UUID, Tube> lasers;
+	private HashSet<Fighter> targets;
 
 	/** Location of laser sound */
 	URL laserURL;
@@ -117,8 +113,7 @@ public class GameInterface extends SimpleGame {
 		bulletMaterial = display.getRenderer().createMaterialState();
 		bulletMaterial.setEmissive(ColorRGBA.green.clone());
 
-		targets = new HashMap<UUID, Spatial>();
-		lasers = new HashMap<UUID, Tube>();
+		targets = new HashSet<Fighter>();
 	}
 
 	private void setupSound() {
@@ -211,6 +206,18 @@ public class GameInterface extends SimpleGame {
 		return(rootNode);
 	}
 	
+	void addFighter(Fighter fighter){
+		fighter.getNode().addController(new FighterMover(fighter, this));
+		
+		rootNode.attachChild(fighter.getNode());
+		rootNode.updateRenderState();
+		
+		targets.add(fighter);
+		
+		tieSound.setWorldPosition(fighter.getNode().getLocalTranslation());
+		tieSound.play();
+	}
+	
 	AudioTrack getLaserSound(){
 		return(laserSound);
 	}
@@ -221,6 +228,10 @@ public class GameInterface extends SimpleGame {
 	
 	AudioTrack getTieSound(){
 		return(tieSound);
+	}
+	
+	HashSet<Fighter> getTargets(){
+		return(targets);
 	}
 
 }
