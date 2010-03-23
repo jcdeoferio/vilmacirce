@@ -41,9 +41,23 @@ public class Fighter{
 	}
 	
 	private Node node;
+	private int HP;
 	
 	public Fighter(Node node){
 		this.node = node;
+		this.HP = 3;
+	}
+	
+	//true if shot was killing shot
+	public synchronized boolean hit(int dmg){
+		if(node != null && HP > 0){
+			HP -= dmg;
+			
+			if(HP <= 0)
+				return(true);
+		}
+		
+		return(false);
 	}
 	
 	public static ByteArrayInputStream fighterModel(){
@@ -67,6 +81,10 @@ public class Fighter{
 	
 	public Node getNode(){
 		return(node);
+	}
+
+	public void clearNode() {
+		node = null;
 	}
 	
 }
