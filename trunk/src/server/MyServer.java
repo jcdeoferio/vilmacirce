@@ -74,16 +74,16 @@ public class MyServer {
 
 			loggedInUsersSockets.put(clientip, conn);
 			loggedInUsersScores.put(clientip, 0);
-
+			
 			while (true) {
 				String msg = conn.getMessage();
-				if (msg.startsWith("DONE")) {
+				if (msg.startsWith("DONE")) { //client died/quit game FORMAT: DONE username score time
 					String line[] = msg.split(" ");
 					String username = line[0];
 					String score = line[1];
 					String time = line[2];
-					// save to file if top 10
-				} else {
+					// TODO save to file if top 10
+				} else { //Score update from client every time a tie fighter dies? FORMAT: score 
 					loggedInUsersScores.put(clientip, Integer.parseInt(msg));
 					for (Entry<String, MyConnection> entry : loggedInUsersSockets
 							.entrySet()) {
