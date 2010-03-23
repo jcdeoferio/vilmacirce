@@ -55,6 +55,7 @@ public class MyClient {
 	}
 
 	public void playerFinish(String username, int score, long time) {
+		app.initialized = false;
 		conn.sendMessage("DONE "+username + " " + score + " " + time);
 		JOptionPane.showMessageDialog(null, conn.getMessage(), "Thank You for Playing!", JOptionPane.INFORMATION_MESSAGE);
 		System.exit(1);
