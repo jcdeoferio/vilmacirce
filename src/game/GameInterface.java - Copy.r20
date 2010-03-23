@@ -6,11 +6,7 @@ import java.util.HashSet;
 import java.util.Random;
 import java.util.logging.Logger;
 
-import javax.swing.JOptionPane;
-
 import util.Fighter;
-
-import client.MyClient;
 
 import com.jme.app.SimpleGame;
 import com.jme.image.Texture;
@@ -39,10 +35,20 @@ import com.jmex.audio.AudioTrack;
  * @author Jack Lindamood
  */
 public class GameInterface extends SimpleGame {
-	private MyClient client;
-	private long startTime;
+	/**
+	 * @return the logger
+	 */
+	public static Logger getLogger() {
+		return logger;
+	}
+	
+	public Camera getCam(){
+		return cam;
+	}
+
 	private static final Logger logger = Logger.getLogger(GameInterface.class
 			.getName());
+
 	/** Material for my bullet */
 	MaterialState bulletMaterial;
 
@@ -72,25 +78,9 @@ public class GameInterface extends SimpleGame {
 	private AudioTrack tieSound;
 	public boolean initialized;
 	long lastTimeFired;
-
+	
 	int score;
 	long lastTimeHit;
-
-	public GameInterface(MyClient myClient) {
-		super();
-		client = myClient;
-	}
-
-	/**
-	 * @return the logger
-	 */
-	public static Logger getLogger() {
-		return logger;
-	}
-
-	public Camera getCam() {
-		return cam;
-	}
 
 	protected void simpleInitGame() {
 		setupSound();
@@ -120,8 +110,8 @@ public class GameInterface extends SimpleGame {
 		input.addAction(new FireBullet(this), InputHandler.DEVICE_MOUSE,
 				InputHandler.BUTTON_ALL, InputHandler.AXIS_NONE, true);
 
-		input.addAction(new SpawnTieFighter(this, Fighter.fighterModel()),
-				"spawntiefighter", KeyInput.KEY_F, false);
+		input.addAction(new SpawnTieFighter(this, Fighter.fighterModel()), "spawntiefighter",
+				KeyInput.KEY_F, false);
 
 		/** Make bullet material */
 		bulletMaterial = display.getRenderer().createMaterialState();
@@ -129,7 +119,6 @@ public class GameInterface extends SimpleGame {
 
 		targets = new HashSet<Fighter>();
 		initialized = true;
-		startTime = System.currentTimeMillis();
 	}
 
 	private void setupSound() {
@@ -143,14 +132,14 @@ public class GameInterface extends SimpleGame {
 				"/jmetest/data/sound/explosion.ogg"), false);
 		targetSound.setMaxAudibleDistance(1000);
 		targetSound.setVolume(1.0f);
-
+		
 		laserSound = audio.createAudioTrack(getClass().getResource(
 				"/jmetest/data/sound/sounds/gunstie.ogg"), false);
 		laserSound.setMaxAudibleDistance(1000);
 		laserSound.setVolume(1.0f);
-
+		
 		tieSound = audio.createAudioTrack(getClass().getResource(
-				"/jmetest/data/sound/sounds/tie.ogg"), false);
+		"/jmetest/data/sound/sounds/tie.ogg"), false);
 		tieSound.setMaxAudibleDistance(1000);
 		tieSound.setVolume(1.0f);
 	}
@@ -195,7 +184,7 @@ public class GameInterface extends SimpleGame {
 
 		sb.updateRenderState();
 	}
-
+	
 	/**
 	 * Called every frame for updating
 	 */
@@ -216,69 +205,64 @@ public class GameInterface extends SimpleGame {
 		if (AudioSystem.isCreated()) {
 			AudioSystem.getSystem().cleanup();
 		}
-		long time = System.currentTimeMillis() - startTime;
-		String name = JOptionPane.showInputDialog(null, "You got a total of "
-				+ getScore() + "!! What is your name?",
-				"Thank You for Playing!", JOptionPane.QUESTION_MESSAGE);
-		client.playerFinish(name, getScore(), time);
 	}
-
-	Node getRootNode() {
-		return (rootNode);
+	
+	Node getRootNode(){
+		return(rootNode);
 	}
-
-	synchronized void addFighter(Fighter fighter) {
+	
+	synchronized void addFighter(Fighter fighter){
 		fighter.getNode().addController(new FighterMover(fighter, this));
-
+		
 		rootNode.attachChild(fighter.getNode());
 		rootNode.updateRenderState();
-
+		
 		targets.add(fighter);
-
+		
 		tieSound.setWorldPosition(fighter.getNode().getLocalTranslation());
 		tieSound.play();
 	}
-
-	void removeFighter(Fighter fighter) {
+	
+	void removeFighter(Fighter fighter){
 		targetSound.setWorldPosition(fighter.getNode().getLocalTranslation());
 		targetSound.play();
-
+		
 		fighter.getNode().removeFromParent();
-
+		
 		targets.remove(fighter);
-
+		
 		fighter.clearNode();
-
+		
 		score += 10;
 	}
-
-	AudioTrack getLaserSound() {
-		return (laserSound);
+	
+	AudioTrack getLaserSound(){
+		return(laserSound);
 	}
-
-	AudioTrack getTargetSound() {
-		return (targetSound);
+	
+	AudioTrack getTargetSound(){
+		return(targetSound);
 	}
-
-	AudioTrack getTieSound() {
-		return (tieSound);
+	
+	AudioTrack getTieSound(){
+		return(tieSound);
 	}
-
-	HashSet<Fighter> getTargets() {
-		return (targets);
+	
+	HashSet<Fighter> getTargets(){
+		return(targets);
 	}
-
-	int getScore() {
-		return (score);
+	
+	int getScore(){
+		return(score);
 	}
-
-	void hit() {
+	
+	void hit(){
 		long currTime = System.currentTimeMillis();
 		if (currTime - lastTimeHit < 250) {
 			return;
 		}
+		
 		score -= 10;
-		lastTimeHit = currTime;
 	}
 
 }

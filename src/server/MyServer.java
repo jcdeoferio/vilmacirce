@@ -61,13 +61,13 @@ public class MyServer {
 		}
 	}
 
-	class ServerGame extends Thread {
-		public void run() {
-			app = new GameInterface();
-			app.setConfigShowMode(ConfigShowMode.AlwaysShow);
-			app.start();
-		}
-	}
+//	class ServerGame extends Thread {
+//		public void run() {
+//			app = new GameInterface();
+//			app.setConfigShowMode(ConfigShowMode.AlwaysShow);
+//			app.start();
+//		}
+//	}
 
 	class ServerSenderThread extends Thread {
 		private Socket socket;
@@ -85,9 +85,9 @@ public class MyServer {
 
 		public void run() {
 			while (true) {
-				conn.sendMessage("SPAWN " + (rand.nextInt(10)+5));
+				conn.sendMessage("SPAWN " + (rand.nextInt(5)+5));
 				try {
-					Thread.sleep(Math.abs(rand.nextLong()) % (30000));
+					Thread.sleep(10000 + Math.abs(rand.nextLong()) % 20000);
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 					continue;
@@ -118,7 +118,7 @@ public class MyServer {
 					String score = line[1];
 					String time = line[2];
 					// TODO save to file if top 10
-
+					System.out.println(msg);
 					loggedInUsersConns.remove(clientip);
 					loggedInUsersScores.remove(clientip);
 					break;
