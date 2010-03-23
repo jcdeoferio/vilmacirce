@@ -7,6 +7,7 @@ import com.jme.math.Vector3f;
 import com.jme.scene.Controller;
 import com.jme.scene.Spatial;
 import com.jme.scene.TriMesh;
+import com.jmex.audio.AudioTrack;
 
 class BulletMover extends Controller {
 	private static final long serialVersionUID = 1L;
@@ -23,12 +24,16 @@ class BulletMover extends Controller {
 	float lifeTime = 5;
 	
 	GameInterface game;
+	
+	AudioTrack targetSound;
 
 	BulletMover(TriMesh bullet, Vector3f direction, GameInterface game) {
 		this.bullet = bullet;
 		this.direction = direction;
 		this.direction.normalizeLocal();
 		this.game = game;
+		
+		this.targetSound = game.getTargetSound();
 	}
 
 	public void update(float time) {
@@ -50,7 +55,7 @@ class BulletMover extends Controller {
 
 			if (bullet.getWorldBound().intersects(target.getWorldBound())) {
 				GameInterface.getLogger().info("OWCH!!!");
-				game.targetSound.setWorldPosition(target.getWorldTranslation());
+				targetSound.setWorldPosition(target.getWorldTranslation());
 
 				target.setLocalTranslation(new Vector3f(game.r.nextFloat() * 10, game.r
 						.nextFloat() * 10, game.r.nextFloat() * 10));
@@ -59,7 +64,7 @@ class BulletMover extends Controller {
 
 				lifeTime = 0;
 
-				game.targetSound.play();
+				targetSound.play();
 			}
 		}
 	}
