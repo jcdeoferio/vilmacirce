@@ -1,49 +1,33 @@
 package game;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.net.URL;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.Random;
 import java.util.UUID;
-import java.util.Map.Entry;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import util.Fighter;
-import util.SerializableSpatial;
 
 import com.jme.app.SimpleGame;
-import com.jme.bounding.BoundingBox;
-import com.jme.bounding.BoundingSphere;
 import com.jme.image.Texture;
 import com.jme.input.InputHandler;
 import com.jme.input.KeyInput;
-import com.jme.input.action.InputActionEvent;
-import com.jme.input.action.KeyInputAction;
 import com.jme.math.Vector3f;
 import com.jme.renderer.Camera;
 import com.jme.renderer.ColorRGBA;
-import com.jme.scene.Controller;
 import com.jme.scene.Node;
 import com.jme.scene.Skybox;
 import com.jme.scene.Spatial;
 import com.jme.scene.Text;
-import com.jme.scene.TriMesh;
-import com.jme.scene.shape.Sphere;
 import com.jme.scene.shape.Tube;
 import com.jme.scene.state.CullState;
 import com.jme.scene.state.MaterialState;
 import com.jme.util.TextureManager;
-import com.jme.util.export.binary.BinaryImporter;
 import com.jme.util.resource.ResourceLocatorTool;
 import com.jme.util.resource.SimpleResourceLocator;
 import com.jmex.audio.AudioSystem;
 import com.jmex.audio.AudioTrack;
-import com.jmex.model.converters.FormatConverter;
-import com.jmex.model.converters.MaxToJme;
 
 /**
  * Started Date: Jul 24, 2004 <br>
@@ -67,10 +51,6 @@ public class GameInterface extends SimpleGame {
 	private static final Logger logger = Logger.getLogger(GameInterface.class
 			.getName());
 
-	// Node ties;
-
-	// Node lasers;
-
 	/** Material for my bullet */
 	MaterialState bulletMaterial;
 
@@ -78,11 +58,9 @@ public class GameInterface extends SimpleGame {
 	// Node target;
 	ByteArrayInputStream targetModel;
 
-	Node laserNode;
+	HashMap<UUID, Spatial> targets;
 
-	volatile HashMap<UUID, Spatial> targets;
-
-	volatile HashMap<UUID, Tube> lasers;
+	HashMap<UUID, Tube> lasers;
 
 	/** Location of laser sound */
 	URL laserURL;
@@ -131,34 +109,12 @@ public class GameInterface extends SimpleGame {
 		input.addAction(new FireBullet(this), InputHandler.DEVICE_MOUSE,
 				InputHandler.BUTTON_ALL, InputHandler.AXIS_NONE, true);
 
-		input.addAction(new SpawnTieFighter(this), "spawntiefighter",
+		input.addAction(new SpawnTieFighter(this, Fighter.fighterModel()), "spawntiefighter",
 				KeyInput.KEY_F, false);
 
 		/** Make bullet material */
 		bulletMaterial = display.getRenderer().createMaterialState();
 		bulletMaterial.setEmissive(ColorRGBA.green.clone());
-
-		ByteArrayOutputStream BO = new ByteArrayOutputStream();
-		try {
-			/** Make target material */
-			// Point to a URL of my model
-			URL model = GameInterface.class.getClassLoader().getResource(
-					"jmetest/data/model/models/tie/TIEF.3DS");
-
-			// Create something to convert .3ds format to .jme
-			FormatConverter converter = new MaxToJme();
-			converter.convert(model.openStream(), BO);
-
-			targetModel = new ByteArrayInputStream(BO.toByteArray());
-
-		} catch (IOException e) { // Just in case anything happens
-			logger.logp(Level.SEVERE, this.getClass().toString(),
-					"simpleInitGame()", "Exception", e);
-			System.exit(0);
-		}
-
-		laserNode = new Node("laserNode");
-		rootNode.attachChild(laserNode);
 
 		targets = new HashMap<UUID, Spatial>();
 		lasers = new HashMap<UUID, Tube>();
@@ -243,126 +199,9 @@ public class GameInterface extends SimpleGame {
 			AudioSystem.getSystem().cleanup();
 		}
 	}
-
-	Node getRootNode() {
-		return (rootNode);
+	
+	Node getRootNode(){
+		return(rootNode);
 	}
 
-	void setRootNode(Node rootNode) {
-		this.rootNode = rootNode;
-		this.rootNode.updateRenderState();
-	}
-
-	public LinkedList<Fighter> getFighters() {
-		LinkedList<Fighter> fighters = new LinkedList<Fighter>();
-
-		if (targets == null)
-			return (fighters);
-
-		for (Entry<UUID, Spatial> targetEntry : targets.entrySet()) {
-			UUID targetUUID = targetEntry.getKey();
-			Spatial target = targetEntry.getValue();
-
-			fighters.add(new Fighter(targetUUID, target));
-		}
-
-		return (fighters);
-	}
-
-	public void setFighters(LinkedList<Fighter> fighters) {
-		if (targetModel == null || targets == null)
-			return;
-
-		HashMap<UUID, Spatial> targetsToBeRemoved = new HashMap<UUID, Spatial>(
-				targets);
-
-		for (Fighter fighter : fighters) {
-			Spatial target = null;
-			if (targets.containsKey(fighter.getUUID())) {
-				target = targets.get(fighter.getUUID());
-				targetsToBeRemoved.remove(fighter.getUUID());
-			} else {
-				// try {
-				// targetModel.reset();
-				// // Use the format converter to convert .3ds to .jme
-				// target = (Node)
-				// BinaryImporter.getInstance().load(targetModel);
-				UUID targetUUID = fighter.getUUID();
-				target = new Sphere(targetUUID.toString(), 16, 16, 5);
-				target.setModelBound(new BoundingSphere());
-				target.updateModelBound();
-				// Put her on the scene graph
-				rootNode.attachChild(target);
-
-				rootNode.updateRenderState();
-
-				targets.put(fighter.getUUID(), target);
-
-				// } catch (IOException e) { // Just in case anything happens
-				// logger.logp(Level.SEVERE, this.getClass().toString(),
-				// "simpleInitGame()", "Exception", e);
-				// System.exit(0);
-				// }
-			}
-
-			target.setLocalRotation(fighter.getLocalRotation());
-			target.setLocalTranslation(fighter.getLocalTranslation());
-		}
-		for (Entry<UUID, Spatial> targetEntry : targetsToBeRemoved.entrySet()) {
-			UUID targetUUID = targetEntry.getKey();
-			Spatial target = targetEntry.getValue();
-			target.removeFromParent();
-			targets.remove(targetUUID);
-		}
-	}
-
-	public LinkedList<SerializableSpatial> getLasers() {
-		LinkedList<SerializableSpatial> serLasers = new LinkedList<SerializableSpatial>();
-
-		if (lasers == null)
-			return (serLasers);
-
-		for (Entry<UUID, Tube> laser : lasers.entrySet()) {
-			serLasers.add(new SerializableSpatial(laser.getKey(), laser
-					.getValue()));
-		}
-
-		return (serLasers);
-	}
-
-	public void setLasers(LinkedList<SerializableSpatial> serLasers) {
-		if (laserNode == null)// || lasers == null)
-			return;
-
-		// for(Tube laser : lasers.values())
-		// rootNode.detachChild(laser);
-
-		laserNode.detachAllChildren();
-
-		lasers = new HashMap<UUID, Tube>();
-
-		for (SerializableSpatial serLaser : serLasers) {
-			Tube laser = null;
-			// if(lasers.containsKey(serLaser.getUUID())){
-			// laser = lasers.get(serLaser.getUUID());
-			// }
-			// else{
-			laser = new Tube(serLaser.getUUID().toString(), 0.1f, 0.01f, 1.0f);
-			laser.setModelBound(new BoundingBox());
-			laser.updateModelBound();
-			laser.setRenderState(bulletMaterial);
-
-			laser.updateGeometricState(0, true);
-
-			laserNode.attachChild(laser);
-
-			lasers.put(serLaser.getUUID(), laser);
-
-			laser.updateRenderState();
-			// }
-
-			laser.setLocalRotation(serLaser.getLocalRotation());
-			laser.setLocalTranslation(serLaser.getLocalTranslation());
-		}
-	}
 }
