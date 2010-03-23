@@ -24,6 +24,7 @@ import com.jme.input.KeyInput;
 import com.jme.input.action.InputActionEvent;
 import com.jme.input.action.KeyInputAction;
 import com.jme.math.Vector3f;
+import com.jme.renderer.Camera;
 import com.jme.renderer.ColorRGBA;
 import com.jme.scene.Controller;
 import com.jme.scene.Node;
@@ -52,6 +53,17 @@ import com.jmex.model.converters.MaxToJme;
  * @author Jack Lindamood
  */
 public class GameInterface extends SimpleGame {
+	/**
+	 * @return the logger
+	 */
+	public static Logger getLogger() {
+		return logger;
+	}
+	
+	public Camera getCam(){
+		return cam;
+	}
+
 	private static final Logger logger = Logger.getLogger(GameInterface.class
 			.getName());
 
@@ -116,10 +128,10 @@ public class GameInterface extends SimpleGame {
 		 * Set the action called "firebullet", bound to DEVICE_MOUSE, to
 		 * performAction FireBullet
 		 */
-		input.addAction(new FireBullet(), InputHandler.DEVICE_MOUSE,
+		input.addAction(new FireBullet(this), InputHandler.DEVICE_MOUSE,
 				InputHandler.BUTTON_ALL, InputHandler.AXIS_NONE, true);
 
-		input.addAction(new SpawnTieFighter(), "spawntiefighter",
+		input.addAction(new SpawnTieFighter(this), "spawntiefighter",
 				KeyInput.KEY_F, false);
 
 		/** Make bullet material */
@@ -209,132 +221,7 @@ public class GameInterface extends SimpleGame {
 
 		sb.updateRenderState();
 	}
-
-	class SpawnTieFighter extends KeyInputAction {
-
-		@Override
-		public void performAction(InputActionEvent evt) {
-			// try {
-			// targetModel.reset();
-			// Node target = (Node)
-			// BinaryImporter.getInstance().load(targetModel);
-			// target.rotateUpTo(new Vector3f(0.0f, 0.0f, 1.0f));
-			UUID targetUUID = UUID.randomUUID();
-			Spatial target = new Sphere(targetUUID.toString(), 16, 16, 5);
-			target.setModelBound(new BoundingSphere());
-			target.updateModelBound();
-			// Put her on the scene graph
-			rootNode.attachChild(target);
-
-			rootNode.updateRenderState();
-
-			targets.put(UUID.randomUUID(), target);
-			// } catch (IOException e) { // Just in case anything happens
-			// logger.logp(Level.SEVERE, this.getClass().toString(),
-			// "simpleInitGame()", "Exception", e);
-			// System.exit(0);
-			// }
-		}
-
-	}
-
-	class FireBullet extends KeyInputAction {
-		int numLasors;
-
-		public void performAction(InputActionEvent evt) {
-			long currTime = System.currentTimeMillis();
-			if (currTime - lastTimeFired < 250) {
-				return;
-			}
-			lastTimeFired = currTime;
-			logger.info("BANG");
-			/** Create bullet */
-			Tube lasor = new Tube("lasor" + numLasors++, 0.1f, 0.01f, 1.0f);
-			lasor.rotateUpTo(cam.getDirection());
-			lasor.setModelBound(new BoundingBox());
-			lasor.updateModelBound();
-			/** Move bullet to the camera location */
-			Vector3f lasorDir = new Vector3f(1.0f, 1.0f, 1.0f);
-			lasor.setLocalTranslation(lasorDir.add(new Vector3f(cam
-					.getLocation())));
-			lasor.setRenderState(bulletMaterial);
-			/**
-			 * Update the new world locaion for the bullet before I add a
-			 * controller
-			 */
-			lasor.updateGeometricState(0, true);
-			/**
-			 * Add a movement controller to the bullet going in the camera's
-			 * direction
-			 */
-			lasor.addController(new BulletMover(lasor, new Vector3f(cam
-					.getDirection())));
-			laserNode.attachChild(lasor);
-
-			lasers.put(UUID.randomUUID(), lasor);
-
-			lasor.updateRenderState();
-			/** Signal our sound to play laser during rendering */
-			laserSound.setWorldPosition(cam.getLocation());
-			laserSound.play();
-		}
-	}
-
-	class BulletMover extends Controller {
-		private static final long serialVersionUID = 1L;
-		/** Bullet that's moving */
-		TriMesh bullet;
-
-		/** Direciton of bullet */
-		Vector3f direction;
-
-		/** speed of bullet */
-		float speed = 80;
-
-		/** Seconds it will last before going away */
-		float lifeTime = 5;
-
-		BulletMover(TriMesh bullet, Vector3f direction) {
-			this.bullet = bullet;
-			this.direction = direction;
-			this.direction.normalizeLocal();
-		}
-
-		public void update(float time) {
-			lifeTime -= time;
-			/** If life is gone, remove it */
-			if (lifeTime < 0) {
-				laserNode.detachChild(bullet);
-				bullet.removeController(this);
-				lasers.remove(bullet);//should be the key not the value
-				return;
-			}
-			/** Move bullet */
-			Vector3f bulletPos = bullet.getLocalTranslation();
-			bulletPos.addLocal(direction.mult(time * speed));
-			bullet.setLocalTranslation(bulletPos);
-			/** Does the bullet intersect with a target? */
-			for (Entry<UUID, Spatial> targetEntry : targets.entrySet()) {
-				Spatial target = targetEntry.getValue();
-				UUID targetuuid = targetEntry.getKey();
-
-				if (bullet.getWorldBound().intersects(target.getWorldBound())) {
-					logger.info("OWCH!!!");
-					targetSound.setWorldPosition(target.getWorldTranslation());
-
-					target.setLocalTranslation(new Vector3f(r.nextFloat() * 10,
-							r.nextFloat() * 10, r.nextFloat() * 10));
-					// target.removeFromParent();
-					// targets.remove(targetuuid);
-
-					lifeTime = 0;
-
-					targetSound.play();
-				}
-			}
-		}
-	}
-
+	
 	/**
 	 * Called every frame for updating
 	 */
