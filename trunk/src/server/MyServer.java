@@ -153,7 +153,7 @@ public class MyServer {
 					if(rank == -1)
 						conn.sendMessage("Sorry, you didn't get to the top 10");
 					else
-						conn.sendMessage("Congratulations! you got in the top ten! Your rank: " + rank);
+						conn.sendMessage("Congratulations! You got in the top ten! Your rank: " + rank);
 					loggedInUsersConns.remove(clientip);
 					loggedInUsersScores.remove(clientip);
 					break;
