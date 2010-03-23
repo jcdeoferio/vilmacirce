@@ -211,7 +211,7 @@ public class GameInterface extends SimpleGame {
 		return(rootNode);
 	}
 	
-	void addFighter(Fighter fighter){
+	synchronized void addFighter(Fighter fighter){
 		fighter.getNode().addController(new FighterMover(fighter, this));
 		
 		rootNode.attachChild(fighter.getNode());

@@ -47,7 +47,10 @@ class FireBullet extends KeyInputAction {
 		 */
 		lasor.addController(new BulletMover(lasor, new Vector3f(game.getCam()
 				.getDirection()), game));
-		game.getRootNode().attachChild(lasor);
+		synchronized (game) {
+			game.getRootNode().attachChild(lasor);	
+		}
+		
 
 		lasor.updateRenderState();
 		/** Signal our sound to play laser during rendering */
