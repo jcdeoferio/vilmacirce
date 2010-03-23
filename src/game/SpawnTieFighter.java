@@ -2,6 +2,7 @@ package game;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.util.Random;
 import java.util.UUID;
 import java.util.logging.Level;
 
@@ -12,6 +13,7 @@ import com.jme.bounding.BoundingSphere;
 import com.jme.input.action.InputActionEvent;
 import com.jme.input.action.KeyInputAction;
 import com.jme.math.Vector3f;
+import com.jme.renderer.Camera;
 import com.jme.scene.Node;
 import com.jme.scene.Spatial;
 import com.jme.scene.shape.Sphere;
@@ -33,34 +35,41 @@ public class SpawnTieFighter extends KeyInputAction {
 
 	@Override
 	public void performAction(InputActionEvent evt) {
-		Node target = null;
+		spawnRandom(5, game);
+	}
+	
+	public static void spawnRandom(int n, GameInterface game){
+		for(int i = 0; i < n; i++)
+			try {
+				spawnRandom(game);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+	}
+	
+	public static void spawnRandom(GameInterface game) throws IOException{
+		Fighter fighter = Fighter.newFighter();
+		Camera cam = game.getCam();
 		
-		try {
-			targetModel.reset();
-			target = (Node) BinaryImporter.getInstance().load(targetModel);
-
-			game.targets.put(UUID.randomUUID(), target);
-		} catch (IOException e) { // Just in case anything happens
-			GameInterface.getLogger().logp(Level.SEVERE,
-					this.getClass().toString(), "simpleInitGame()",
-					"Exception", e);
-			System.exit(0);
-		}
+		float randX = randDisp();
+		float randY = randDisp();
+		float randZ = randDisp();
+		Vector3f randomPos = new Vector3f(cam.getLocation()).add(randX, randY, randZ);
+		fighter.getNode().setLocalTranslation(randomPos);
 		
-		target.rotateUpTo(new Vector3f(0.0f, 0.0f, 1.0f));
-		// Spatial target = new Sphere(targetUUID.toString(), 16, 16, 5);
-		target.setModelBound(new BoundingBox());
-		target.updateModelBound();
+		game.addFighter(fighter);
+	}
+	
+	private static float randDisp(){
+		Random r = new Random();
 		
-		target.addController(new FighterMover(new Fighter(target), game));
+		float d = 0;
+		if(r.nextBoolean())
+			d = -1;
+		else
+			d = 1;
 		
-		// Put her on the scene graph
-		game.getRootNode().attachChild(target);
-
-		game.getRootNode().updateRenderState();
-		
-		tieSound.setWorldPosition(target.getLocalTranslation());
-		tieSound.play();
+		return(((r.nextFloat() * 100) % 50 + 20) * d);
 	}
 
 }
