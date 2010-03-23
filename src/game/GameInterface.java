@@ -78,6 +78,9 @@ public class GameInterface extends SimpleGame {
 	private AudioTrack tieSound;
 	public boolean initialized;
 	long lastTimeFired;
+	
+	int score;
+	long lastTimeHit;
 
 	protected void simpleInitGame() {
 		setupSound();
@@ -229,6 +232,8 @@ public class GameInterface extends SimpleGame {
 		targets.remove(fighter);
 		
 		fighter.clearNode();
+		
+		score += 10;
 	}
 	
 	AudioTrack getLaserSound(){
@@ -245,6 +250,19 @@ public class GameInterface extends SimpleGame {
 	
 	HashSet<Fighter> getTargets(){
 		return(targets);
+	}
+	
+	int getScore(){
+		return(score);
+	}
+	
+	void hit(){
+		long currTime = System.currentTimeMillis();
+		if (currTime - lastTimeHit < 250) {
+			return;
+		}
+		
+		score -= 10;
 	}
 
 }

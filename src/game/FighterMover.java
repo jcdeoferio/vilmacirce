@@ -14,7 +14,7 @@ public class FighterMover extends Controller {
 	
 	private Fighter fighter;
 	private GameInterface game;
-	private float speed = 20;
+	private float speed = 50;
 	
 	public FighterMover(Fighter fighter, GameInterface game){
 		this.fighter = fighter;
@@ -33,6 +33,10 @@ public class FighterMover extends Controller {
 		
 		fighterNode.lookAt(cam.getLocation(), up);
 		fighterNode.rotateUpTo(cam.getUp());
+		
+		if(fighterNode.getLocalTranslation().distance(cam.getLocation()) < 10.0f){
+			game.hit();
+		}
 	}
 
 }

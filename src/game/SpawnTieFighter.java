@@ -55,7 +55,7 @@ public class SpawnTieFighter extends KeyInputAction {
 		else
 			d = 1;
 		
-		return(((r.nextFloat() * 100) % 50 + 20) * d);
+		return(((r.nextFloat() * 1000) % 300 + 75) * d);
 	}
 
 }
