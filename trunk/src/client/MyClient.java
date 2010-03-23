@@ -7,6 +7,8 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.Scanner;
 
+import javax.swing.JOptionPane;
+
 import util.MyConnection;
 
 public class MyClient {
@@ -54,5 +56,7 @@ public class MyClient {
 
 	public void playerFinish(String username, int score, long time) {
 		conn.sendMessage("DONE "+username + " " + score + " " + time);
+		JOptionPane.showMessageDialog(null, conn.getMessage(), "Thank You for Playing!", JOptionPane.INFORMATION_MESSAGE);
+		System.exit(1);
 	}
 }
