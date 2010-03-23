@@ -3,11 +3,15 @@ package server;
 import game.GameInterface;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.Random;
 import java.util.Scanner;
 import java.util.Map.Entry;
@@ -28,6 +32,7 @@ public class MyServer {
 	HashMap<String, MyConnection> loggedInUsersConns;
 	HashMap<String, Integer> loggedInUsersScores;
 	int port;
+	boolean done;
 
 	public MyServer(int port) {
 		this.port = port;
@@ -61,13 +66,13 @@ public class MyServer {
 		}
 	}
 
-//	class ServerGame extends Thread {
-//		public void run() {
-//			app = new GameInterface();
-//			app.setConfigShowMode(ConfigShowMode.AlwaysShow);
-//			app.start();
-//		}
-//	}
+	// class ServerGame extends Thread {
+	// public void run() {
+	// app = new GameInterface();
+	// app.setConfigShowMode(ConfigShowMode.AlwaysShow);
+	// app.start();
+	// }
+	// }
 
 	class ServerSenderThread extends Thread {
 		private Socket socket;
@@ -84,8 +89,8 @@ public class MyServer {
 		}
 
 		public void run() {
-			while (true) {
-				conn.sendMessage("SPAWN " + (rand.nextInt(5)+5));
+			while (!done) {
+				conn.sendMessage("SPAWN " + (rand.nextInt(5) + 5));
 				try {
 					Thread.sleep(10000 + Math.abs(rand.nextLong()) % 20000);
 				} catch (InterruptedException e) {
@@ -113,12 +118,42 @@ public class MyServer {
 				String msg = conn.getMessage();
 				if (msg.startsWith("DONE")) { // client died/quit game FORMAT:
 					// DONE username score time
+					done = true;
+					System.out.println(msg);
 					String line[] = msg.split(" ");
-					String username = line[0];
-					String score = line[1];
-					String time = line[2];
+					String username = line[1];
+					int score = Integer.parseInt(line[2]);
+					long time = Long.parseLong(line[3]);
+					User thisUser = new User(username, score, time);
 					// TODO save to file if top 10
 					System.out.println(msg);
+					int rank = -1;
+					try {
+						Scanner in = new Scanner(new File("scores.txt"));
+						LinkedList<User> users = new LinkedList<User>();
+						users.add(thisUser);
+						while (in.hasNextLine()) {
+							String ln[] = in.nextLine().split(" ");
+							users.add(new User(ln[0], Integer.parseInt(ln[1]),
+									Long.parseLong(ln[2])));
+						}
+						Collections.sort(users);
+						in.close();
+						PrintStream out = new PrintStream(new File("scores.txt"));
+						for(int i=0;i<10 && i<users.size();i++){
+							User user = users.get(i);
+							if(user.equals(thisUser))
+								rank = i+1;
+							out.println(user);
+						}
+						out.close();
+					} catch (FileNotFoundException e) {
+						e.printStackTrace();
+					}
+					if(rank == -1)
+						conn.sendMessage("Sorry, you didn't get to the top 10");
+					else
+						conn.sendMessage("Congratulations! you got in the top ten! Your rank: " + rank);
 					loggedInUsersConns.remove(clientip);
 					loggedInUsersScores.remove(clientip);
 					break;

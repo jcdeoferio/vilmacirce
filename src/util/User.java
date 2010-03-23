@@ -2,10 +2,10 @@ package util;
 
 import java.sql.Date;
 
-public class User {
-	String username;
-	int score;
-	long time;
+public class User implements Comparable<User> {
+	public String username;
+	public int score;
+	public long time;
 
 	public User(String username, int score, long time) {
 		this.username = username;
@@ -33,6 +33,13 @@ public class User {
 	}
 
 	public String toString() {
-		return username + " " + score + " " + timeToHMS();
+		return username + " " + score + " " + time;
+	}
+
+	@Override
+	public int compareTo(User u) {
+		if (u.score - score == 0)
+			return (int)(time - u.time);
+		return u.score - score;
 	}
 }

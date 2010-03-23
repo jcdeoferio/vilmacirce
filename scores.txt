@@ -1,1 +1,8 @@
 juancd 1000 120000
+juancd 190 66783
+test 70 51075
+weh 0 484
+wee 0 540
+test 0 840
+test 0 1414
+juancd 0 1426
