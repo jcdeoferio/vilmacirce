@@ -40,7 +40,7 @@ public class MyClient {
 		}
 		System.out.println("Client: Connected!");
 
-		app = new GameInterface();
+		app = new GameInterface(this);
 	}
 
 	public void start() {
