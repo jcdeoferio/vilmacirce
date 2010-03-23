@@ -31,8 +31,8 @@ public class FighterMover extends Controller {
 		Vector3f fighterDir = fighterPos.subtract(cam.getLocation()).normalize().negateLocal();
 		fighterNode.setLocalTranslation(fighterPos.add(fighterDir.mult(time * speed)));
 		
-		fighterNode.rotateUpTo(up);
 		fighterNode.lookAt(cam.getLocation(), up);
+		fighterNode.rotateUpTo(cam.getUp());
 	}
 
 }

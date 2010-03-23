@@ -7,15 +7,19 @@ import com.jme.input.action.InputActionEvent;
 import com.jme.input.action.KeyInputAction;
 import com.jme.math.Vector3f;
 import com.jme.scene.shape.Tube;
+import com.jmex.audio.AudioTrack;
 
 class FireBullet extends KeyInputAction {
 	int numLasors;
 	long lastTimeFired;
 	GameInterface game;
+	AudioTrack laserSound;
 
 	public FireBullet(GameInterface game) {
 		lastTimeFired = 0;
 		this.game = game;
+		
+		this.laserSound = game.getLaserSound();
 	}
 
 	public void performAction(InputActionEvent evt) {
@@ -49,7 +53,7 @@ class FireBullet extends KeyInputAction {
 
 		lasor.updateRenderState();
 		/** Signal our sound to play laser during rendering */
-		game.laserSound.setWorldPosition(game.getCam().getLocation());
-		game.laserSound.play();
+		laserSound.setWorldPosition(game.getCam().getLocation());
+		laserSound.play();
 	}
 }

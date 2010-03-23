@@ -77,8 +77,9 @@ public class GameInterface extends SimpleGame {
 	/**
 	 * The sound tracks that will be in charge of maintaining our sound effects.
 	 */
-	AudioTrack laserSound;
-	AudioTrack targetSound;
+	private AudioTrack laserSound;
+	private AudioTrack targetSound;
+	private AudioTrack tieSound;
 	long lastTimeFired;
 
 	protected void simpleInitGame() {
@@ -131,10 +132,16 @@ public class GameInterface extends SimpleGame {
 				"/jmetest/data/sound/explosion.ogg"), false);
 		targetSound.setMaxAudibleDistance(1000);
 		targetSound.setVolume(1.0f);
+		
 		laserSound = audio.createAudioTrack(getClass().getResource(
 				"/jmetest/data/sound/sounds/gunstie.ogg"), false);
 		laserSound.setMaxAudibleDistance(1000);
 		laserSound.setVolume(1.0f);
+		
+		tieSound = audio.createAudioTrack(getClass().getResource(
+		"/jmetest/data/sound/sounds/tie.ogg"), false);
+		tieSound.setMaxAudibleDistance(1000);
+		tieSound.setVolume(1.0f);
 	}
 
 	private void setupSky() {
@@ -202,6 +209,18 @@ public class GameInterface extends SimpleGame {
 	
 	Node getRootNode(){
 		return(rootNode);
+	}
+	
+	AudioTrack getLaserSound(){
+		return(laserSound);
+	}
+	
+	AudioTrack getTargetSound(){
+		return(targetSound);
+	}
+	
+	AudioTrack getTieSound(){
+		return(tieSound);
 	}
 
 }

@@ -33,7 +33,7 @@ public class MyServer {
 	}
 
 	public void start() {
-		 new ServerGame().start();
+//		 new ServerGame().start();
 		try {
 			loggedInUsersSockets = new HashMap<String, MyConnection>();
 			loggedInUsersScores = new HashMap<String, Integer>();
