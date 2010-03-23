@@ -69,6 +69,7 @@ class BulletMover extends Controller {
 				
 
 				lifeTime = 0;
+				break;//only one target will die.
 			}
 		}
 	}

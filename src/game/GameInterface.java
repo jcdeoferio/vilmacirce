@@ -76,6 +76,7 @@ public class GameInterface extends SimpleGame {
 	private AudioTrack laserSound;
 	private AudioTrack targetSound;
 	private AudioTrack tieSound;
+	public boolean initialized;
 	long lastTimeFired;
 
 	protected void simpleInitGame() {
@@ -114,6 +115,7 @@ public class GameInterface extends SimpleGame {
 		bulletMaterial.setEmissive(ColorRGBA.green.clone());
 
 		targets = new HashSet<Fighter>();
+		initialized = true;
 	}
 
 	private void setupSound() {
