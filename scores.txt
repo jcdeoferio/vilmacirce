@@ -1,6 +1,7 @@
 juancd 1000 120000
 juancd 190 66783
 test 70 51075
+ 30 18984
 weh 0 484
 wee 0 540
 test 0 840
