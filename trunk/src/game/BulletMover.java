@@ -35,7 +35,7 @@ class BulletMover extends Controller {
 		lifeTime -= time;
 		/** If life is gone, remove it */
 		if (lifeTime < 0) {
-			game.laserNode.detachChild(bullet);
+			game.getRootNode().detachChild(bullet);
 			bullet.removeController(this);
 			game.lasers.remove(bullet);// should be the key not the value
 			return;
@@ -47,15 +47,14 @@ class BulletMover extends Controller {
 		/** Does the bullet intersect with a target? */
 		for (Entry<UUID, Spatial> targetEntry : game.targets.entrySet()) {
 			Spatial target = targetEntry.getValue();
-			UUID targetuuid = targetEntry.getKey();
 
 			if (bullet.getWorldBound().intersects(target.getWorldBound())) {
-				game.getLogger().info("OWCH!!!");
+				GameInterface.getLogger().info("OWCH!!!");
 				game.targetSound.setWorldPosition(target.getWorldTranslation());
 
 				target.setLocalTranslation(new Vector3f(game.r.nextFloat() * 10, game.r
 						.nextFloat() * 10, game.r.nextFloat() * 10));
-				// target.removeFromParent();
+//				 target.removeFromParent();
 				// targets.remove(targetuuid);
 
 				lifeTime = 0;

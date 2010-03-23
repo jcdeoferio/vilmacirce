@@ -24,16 +24,14 @@ class FireBullet extends KeyInputAction {
 			return;
 		}
 		lastTimeFired = currTime;
-		game.getLogger().info("BANG");
+		GameInterface.getLogger().info("BANG");
 		/** Create bullet */
 		Tube lasor = new Tube("lasor" + numLasors++, 0.1f, 0.01f, 1.0f);
 		lasor.rotateUpTo(game.getCam().getDirection());
 		lasor.setModelBound(new BoundingBox());
 		lasor.updateModelBound();
 		/** Move bullet to the camera location */
-		Vector3f lasorDir = new Vector3f(1.0f, 1.0f, 1.0f);
-		lasor.setLocalTranslation(lasorDir.add(new Vector3f(game.getCam()
-				.getLocation())));
+		lasor.setLocalTranslation(game.getCam().getLocation().add(0.0f, 1.0f, 0.0f));
 		lasor.setRenderState(game.bulletMaterial);
 		/**
 		 * Update the new world locaion for the bullet before I add a controller
@@ -45,7 +43,7 @@ class FireBullet extends KeyInputAction {
 		 */
 		lasor.addController(new BulletMover(lasor, new Vector3f(game.getCam()
 				.getDirection()), game));
-		game.laserNode.attachChild(lasor);
+		game.getRootNode().attachChild(lasor);
 
 		game.lasers.put(UUID.randomUUID(), lasor);
 
