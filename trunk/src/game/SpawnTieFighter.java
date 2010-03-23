@@ -3,34 +3,20 @@ package game;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.Random;
-import java.util.UUID;
-import java.util.logging.Level;
 
 import util.Fighter;
 
-import com.jme.bounding.BoundingBox;
-import com.jme.bounding.BoundingSphere;
 import com.jme.input.action.InputActionEvent;
 import com.jme.input.action.KeyInputAction;
 import com.jme.math.Vector3f;
 import com.jme.renderer.Camera;
-import com.jme.scene.Node;
-import com.jme.scene.Spatial;
-import com.jme.scene.shape.Sphere;
-import com.jme.util.export.binary.BinaryImporter;
-import com.jmex.audio.AudioTrack;
 
 public class SpawnTieFighter extends KeyInputAction {
 	private GameInterface game;
-	private ByteArrayInputStream targetModel;
-	private AudioTrack tieSound;
 
 	public SpawnTieFighter(GameInterface game, ByteArrayInputStream targetModel) {
 		super();
 		this.game = game;
-		this.targetModel = targetModel;
-		
-		this.tieSound = game.getTieSound();
 	}
 
 	@Override

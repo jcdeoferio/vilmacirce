@@ -218,6 +218,17 @@ public class GameInterface extends SimpleGame {
 		tieSound.play();
 	}
 	
+	void removeFighter(Fighter fighter){
+		targetSound.setWorldPosition(fighter.getNode().getLocalTranslation());
+		targetSound.play();
+		
+		fighter.getNode().removeFromParent();
+		
+		targets.remove(fighter);
+		
+		fighter.clearNode();
+	}
+	
 	AudioTrack getLaserSound(){
 		return(laserSound);
 	}
